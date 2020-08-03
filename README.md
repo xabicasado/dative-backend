@@ -2,11 +2,17 @@
 Developed by Xabier Casado.
 
 Requirements:
-- **MySQL**:  Ver 8.0.21 for Linux on x86_64 (MySQL Community Server - GPL)
 - **dotnet**: 3.1.302
-- **dotnet-ef**: 3.1.6
-- **Microsoft.EntityFrameworkCore.Design**: 3.1.6
+- **MySQL**:  Ver 8.0.21 for Linux on x86_64 (MySQL Community Server - GPL)
+
+Packages:
 - **MySql.Data.EntityFrameworkCore**: 8.0.21
+- **Microsoft.EntityFrameworkCore.Design**: 3.1.6
+- **Microsoft.VisualStudio.Web.CodeGeneration.Design**: 3.1.3
+- **Microsoft.EntityFrameworkCore.SqlServer**: 3.1.6
+Tools:
+- **dotnet-ef**: 3.1.6
+- **dotnet-aspnet-codegenerator**: 3.1.3
 
 ## Project creation
 ```
