@@ -10,6 +10,7 @@ Packages:
 - **Microsoft.EntityFrameworkCore.Design**: 3.1.6
 - **Microsoft.VisualStudio.Web.CodeGeneration.Design**: 3.1.3
 - **Microsoft.EntityFrameworkCore.SqlServer**: 3.1.6
+
 Tools:
 - **dotnet-ef**: 3.1.6
 - **dotnet-aspnet-codegenerator**: 3.1.3
