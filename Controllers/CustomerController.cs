@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DativeBackend.Models;
@@ -10,6 +10,7 @@ using DativeBackend.Models;
 namespace DativeBackend.Controllers {
     [Route("Api/[controller]")]
     [ApiController]
+    [Authorize]  // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CustomerController : ControllerBase {
         private readonly CustomerContext _context;
 
@@ -19,32 +20,33 @@ namespace DativeBackend.Controllers {
 
         // GET: Api/Customer/GetAllCustomers
         [HttpGet("GetAllCustomers")]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomer() {
-            return await _context.Customer.ToListAsync();
+        public async Task<ActionResult<IEnumerable<CustomerDTO>>> GetCustomer() {
+            return await _context.Customer
+                .Select(x => CustomerToDTO(x))
+                .ToListAsync();
         }
 
         // GET: Api/Customer/GetCustomerData/5
         [HttpGet("GetCustomerData/{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id) {
+        public async Task<ActionResult<CustomerDTO>> GetCustomer(int id) {
             var customer = await _context.Customer.FindAsync(id);
 
             if (customer == null) {
                 return NotFound();
             }
 
-            return customer;
+            return CustomerToDTO(customer);
         }
 
         // POST: api/Customer/CreateCustomer
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost("CreateCustomer")]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer) {
+        public async Task<ActionResult<CustomerDTO>> PostCustomer(Customer customer) {
             _context.Customer.Add(customer);
             await _context.SaveChangesAsync();
 
-            // return CreatedAtAction("GetCustomer", new { id = customer.CustomerId }, customer);
-            return CreatedAtAction(nameof(GetCustomer), new { id = customer.CustomerId }, customer);
+            return CreatedAtAction(nameof(GetCustomer), new { id = customer.CustomerId }, CustomerToDTO(customer));
         }
 
         /*
@@ -93,5 +95,14 @@ namespace DativeBackend.Controllers {
             return _context.Customer.Any(e => e.CustomerId == id);
         }
         */
+
+        private static CustomerDTO CustomerToDTO(Customer customer) =>
+            new CustomerDTO {
+                CustomerId = customer.CustomerId,
+                PostalCode = customer.PostalCode,
+                Name = customer.Name,
+                Surname = customer.Surname,
+                Age = customer.Age
+            };
     }
 }
