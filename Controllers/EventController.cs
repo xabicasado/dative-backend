@@ -14,7 +14,7 @@ namespace DativeBackend.Controllers {
             _producerConfig = producerConfig;
         }
 
-        // POST: api/Event/CustomerEvent
+        // POST: Api/Event/CustomerEvent
         [HttpPost("CustomerEvent")]
         [AllowAnonymous]
         public async Task<ActionResult> PostCustomerEvent(CustomerEvent customerEvent) {

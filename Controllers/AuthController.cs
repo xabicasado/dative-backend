@@ -24,7 +24,7 @@ namespace DativeBackend.Controllers {
             _configuration = configuration;
         }
 
-        // POST: api/Auth
+        // POST: Api/Auth
         [HttpPost]
         [AllowAnonymous]
         public async Task<ActionResult> Login(CustomerLoginDTO customerLoginDTO) {

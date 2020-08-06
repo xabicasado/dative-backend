@@ -1,6 +1,8 @@
 # DativeBackend
 Developed by Xabier Casado.
 
+Doc generated with Swashbuckle and available at: https://localhost:5001/
+
 Requirements:
 - **dotnet**: 3.1.302
 - **MySQL**:  Ver 8.0.21 for Linux on x86_64 (MySQL Community Server - GPL)
@@ -13,6 +15,7 @@ Packages:
 - **Microsoft.AspNetCore.Authentication.JwtBearer**: 3.1.6
 - **Microsoft.Extensions.Caching.StackExchangeRedis**: 3.1.6
 - **Confluent.Kafka**: 1.5.0
+- **Swashbuckle.AspNetCore**: 5.5.1
 
 Tools:
 - **dotnet-ef**: 3.1.6
