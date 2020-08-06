@@ -37,7 +37,7 @@ namespace DativeBackend.Controllers {
             } else {
                 // Retrieve the list from DB and set cache 
                 customerList = await GetCustomerList();
-                await CacheStoreCustomerList(customerList);
+                await SetCacheStoreCustomerList(customerList);
             }           
             
             return customerList;
@@ -54,7 +54,7 @@ namespace DativeBackend.Controllers {
                 customerList = GetDeserializedCustomerList(encodedCustomerList);
             } else {
                 customerList = await GetCustomerList();
-                await CacheStoreCustomerList(customerList);
+                await SetCacheStoreCustomerList(customerList);
             }
             customerDTO = customerList.Find(customer => customer.CustomerId == id);
 
@@ -74,9 +74,15 @@ namespace DativeBackend.Controllers {
             await _context.SaveChangesAsync();
             
             CustomerDTO customerDTO = CustomerToDTO(customer);
-            await CacheStoreCustomer(customerDTO);
+            await SetCacheStoreCustomer(customerDTO);
 
             return CreatedAtAction(nameof(GetCustomer), new { id = customer.CustomerId }, customerDTO);
+        }
+
+        private async Task<List<CustomerDTO>> GetCustomerList() {
+            return await _context.Customer
+                .Select(x => CustomerToDTO(x))
+                .ToListAsync();
         }
 
         private static CustomerDTO CustomerToDTO(Customer customer) =>
@@ -92,7 +98,7 @@ namespace DativeBackend.Controllers {
             return JsonConvert.DeserializeObject<List<CustomerDTO>>(Encoding.UTF8.GetString(encodedCustomerList));
         }
         
-        private async Task CacheStoreCustomerList(List<CustomerDTO> customerList) {
+        private async Task SetCacheStoreCustomerList(List<CustomerDTO> customerList) {
             var cacheKey = "customerList";
             string serializedCustomer = JsonConvert.SerializeObject(customerList);
             var encodedCustomer = Encoding.UTF8.GetBytes(serializedCustomer);
@@ -103,14 +109,8 @@ namespace DativeBackend.Controllers {
             
             await _distributedCache.SetAsync(cacheKey, encodedCustomer, options);
         }
-        
-        private async Task<List<CustomerDTO>> GetCustomerList() {
-            return await _context.Customer
-                .Select(x => CustomerToDTO(x))
-                .ToListAsync();
-        }
-        
-        private async Task CacheStoreCustomer(CustomerDTO customerDTO) {
+
+        private async Task SetCacheStoreCustomer(CustomerDTO customerDTO) {
             List<CustomerDTO> customerList;
             var encodedCustomerList = await _distributedCache.GetAsync("customerList");
             
@@ -121,7 +121,7 @@ namespace DativeBackend.Controllers {
                 customerList = await GetCustomerList();
             }
 
-            await CacheStoreCustomerList(customerList);
+            await SetCacheStoreCustomerList(customerList);
         }
     }
 }
