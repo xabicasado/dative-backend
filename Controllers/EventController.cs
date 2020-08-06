@@ -8,7 +8,8 @@ namespace DativeBackend.Controllers {
     [Route("Api/[controller]")]
     [ApiController]
     public class EventController : ControllerBase {
-        private readonly ProducerConfig _producerConfig;
+        // TODO Set the connection params
+        private ProducerConfig _producerConfig;
 
         public EventController(ProducerConfig producerConfig) {
             _producerConfig = producerConfig;
@@ -18,6 +19,8 @@ namespace DativeBackend.Controllers {
         [HttpPost("CustomerEvent")]
         [AllowAnonymous]
         public async Task<ActionResult> PostCustomerEvent(CustomerEvent customerEvent) {
+            var producer = new ProducerBuilder<Null, string>(_producerConfig).Build();
+            await producer.ProduceAsync(customerEvent.EventType.ToString(), new Message<Null, string> { Value=customerEvent.Data });
             return null;
         }
     }
