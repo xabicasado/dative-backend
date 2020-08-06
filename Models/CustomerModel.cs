@@ -7,13 +7,9 @@ namespace DativeBackend.Models {
         public string Name { get; set; }
         public string Surname { get; set; }
         public int Age { get; set; }
-        
         public string Username { get; set; }
-
         // [JsonIgnore]
         public string Password { get; set; }
-
-        // public string Token { get; set; }
     }
 
     public class CustomerDTO {
@@ -26,8 +22,6 @@ namespace DativeBackend.Models {
 
     public class CustomerLoginDTO {
         public string Username { get; set; }
-
-        // [JsonIgnore]
         public string Password { get; set; }
     }
 }

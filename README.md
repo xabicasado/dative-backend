@@ -12,6 +12,7 @@ Packages:
 - **Microsoft.EntityFrameworkCore.SqlServer**: 3.1.6
 - **Microsoft.AspNetCore.Authentication.JwtBearer**: 3.1.6
 - **Microsoft.Extensions.Caching.StackExchangeRedis**: 3.1.6
+- **Confluent.Kafka**: 1.5.0
 
 Tools:
 - **dotnet-ef**: 3.1.6
@@ -39,11 +40,36 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-## Run redis docker
+## Run Redis docker
 ```
+docker pull redis
+
 docker run --name container-redis -p 6379:6379 -d redis
 
 docker exec -it container-redis sh
 
 redis-cli
+```
+
+## Run Kafka docker
+```
+docker pull bitnami/kafka:latest
+
+docker network create app-tier --driver bridge
+
+docker run -d --name container-zookeeper \
+    --network app-tier \
+    -e ALLOW_ANONYMOUS_LOGIN=yes \
+    bitnami/zookeeper:latest
+
+docker run -d --name container-kafka \
+    --network app-tier \
+    -e ALLOW_PLAINTEXT_LISTENER=yes \
+    -e KAFKA_CFG_ZOOKEEPER_CONNECT=container-zookeeper:2181 \
+    bitnami/kafka:latest
+
+docker run -it --rm \
+    --network app-tier \
+    -e KAFKA_CFG_ZOOKEEPER_CONNECT=container-zookeeper:2181 \
+    bitnami/kafka:latest kafka-topics.sh --list  --zookeeper container-zookeeper:2181
 ```

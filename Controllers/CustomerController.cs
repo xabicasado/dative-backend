@@ -13,8 +13,10 @@ using DativeBackend.Models;
 namespace DativeBackend.Controllers {
     [Route("Api/[controller]")]
     [ApiController]
-    [Authorize]  // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     public class CustomerController : ControllerBase {
+        // Generation command (scaffolding): 
+        // dotnet aspnet-codegenerator controller -name CustomerController -async -api -m Customer -dc CustomerContext -outDir Controllers
         private readonly CustomerContext _context;
         private readonly IDistributedCache _distributedCache;
         
@@ -29,29 +31,13 @@ namespace DativeBackend.Controllers {
             List<CustomerDTO> customerList;
             // First attempt of retrieving from cache
             var encodedCustomerList = await _distributedCache.GetAsync("customerList");
-            /*
-            customerList = await GetCacheCustomerList();
-            if (!customerList.Any()) { }
-            */
+            
             if (encodedCustomerList != null) {
-                string serializedCustomerList = Encoding.UTF8.GetString(encodedCustomerList);
-                customerList = JsonConvert.DeserializeObject<List<CustomerDTO>>(serializedCustomerList);
+                customerList = GetDeserializedCustomerList(encodedCustomerList);
             } else {
-                // Retrieve the list from DB
-                customerList = await _context.Customer
-                    .Select(x => CustomerToDTO(x))
-                    .ToListAsync();
-                
-                // await CacheStoreCustomerList(customerList);
-                var cacheKey = "customerList";  // customerDTO.CustomerId.ToString();
-                string serializedCustomer = JsonConvert.SerializeObject(customerList);
-                var encodedCustomer = Encoding.UTF8.GetBytes(serializedCustomer);
-                
-                var options = new DistributedCacheEntryOptions()
-                                .SetSlidingExpiration(TimeSpan.FromMinutes(5))
-                                .SetAbsoluteExpiration(DateTime.Now.AddHours(6));
-                
-                await _distributedCache.SetAsync(cacheKey, encodedCustomer, options);
+                // Retrieve the list from DB and set cache 
+                customerList = await GetCustomerList();
+                await CacheStoreCustomerList(customerList);
             }           
             
             return customerList;
@@ -60,41 +46,18 @@ namespace DativeBackend.Controllers {
         // GET: Api/Customer/GetCustomerData/5
         [HttpGet("GetCustomerData/{id}")]
         public async Task<ActionResult<CustomerDTO>> GetCustomer(int id) {
+            List<CustomerDTO> customerList;
             CustomerDTO customerDTO;
             var encodedCustomerList = await _distributedCache.GetAsync("customerList");
-            
-            if (encodedCustomerList != null) {
-                var cacheKey = id.ToString();
-                string serializedCustomerList = Encoding.UTF8.GetString(encodedCustomerList);
-                List<CustomerDTO> customerList = JsonConvert.DeserializeObject<List<CustomerDTO>>(serializedCustomerList);
-                customerDTO = customerList.Find(customer => customer.CustomerId == id);
 
+            if (encodedCustomerList != null) {
+                customerList = GetDeserializedCustomerList(encodedCustomerList);
             } else {
-                List<CustomerDTO> customerList = await _context.Customer
-                    .Select(x => CustomerToDTO(x))
-                    .ToListAsync();
-                
-                var cacheKey = "customerList";  // customerDTO.CustomerId.ToString();
-                string serializedCustomer = JsonConvert.SerializeObject(customerList);
-                var encodedCustomer = Encoding.UTF8.GetBytes(serializedCustomer);
-                
-                var options = new DistributedCacheEntryOptions()
-                                .SetSlidingExpiration(TimeSpan.FromMinutes(5))
-                                .SetAbsoluteExpiration(DateTime.Now.AddHours(6));
-                
-                await _distributedCache.SetAsync(cacheKey, encodedCustomer, options);
-                
-                customerDTO = customerList.Find(customer => customer.CustomerId == id);
-                /*
-                Customer customer = await _context.Customer.FindAsync(id);
-                if (customer == null) {
-                    return NotFound();
-                }
-                
-                await CacheStoreCustomer(CustomerToDTO(customer));
-                customerDTO = CustomerToDTO(customer);
-                */
+                customerList = await GetCustomerList();
+                await CacheStoreCustomerList(customerList);
             }
+            customerDTO = customerList.Find(customer => customer.CustomerId == id);
+
             if (customerDTO == null) {
                 return NotFound();
             }
@@ -125,11 +88,26 @@ namespace DativeBackend.Controllers {
                 Age = customer.Age
             };
         
-        // private async Task<ActionResult<IEnumerable<CustomerDTO>>> GetCacheCustomerList() {
-        private async Task<ActionResult<List<CustomerDTO>>> GetCacheCustomerList() {
-            var encodedCustomerList = await _distributedCache.GetAsync("customerList");
+        private List<CustomerDTO> GetDeserializedCustomerList(byte[] encodedCustomerList) {
+            return JsonConvert.DeserializeObject<List<CustomerDTO>>(Encoding.UTF8.GetString(encodedCustomerList));
+        }
+        
+        private async Task CacheStoreCustomerList(List<CustomerDTO> customerList) {
+            var cacheKey = "customerList";
+            string serializedCustomer = JsonConvert.SerializeObject(customerList);
+            var encodedCustomer = Encoding.UTF8.GetBytes(serializedCustomer);
             
-            return encodedCustomerList != null ? JsonConvert.DeserializeObject<List<CustomerDTO>>(Encoding.UTF8.GetString(encodedCustomerList)) : null;
+            var options = new DistributedCacheEntryOptions()
+                            .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                            .SetAbsoluteExpiration(DateTime.Now.AddHours(1));
+            
+            await _distributedCache.SetAsync(cacheKey, encodedCustomer, options);
+        }
+        
+        private async Task<List<CustomerDTO>> GetCustomerList() {
+            return await _context.Customer
+                .Select(x => CustomerToDTO(x))
+                .ToListAsync();
         }
         
         private async Task CacheStoreCustomer(CustomerDTO customerDTO) {
@@ -137,28 +115,13 @@ namespace DativeBackend.Controllers {
             var encodedCustomerList = await _distributedCache.GetAsync("customerList");
             
             if (encodedCustomerList != null) {
-                string serializedCustomerList = Encoding.UTF8.GetString(encodedCustomerList);
-                customerList = JsonConvert.DeserializeObject<List<CustomerDTO>>(serializedCustomerList);
-                 
+                customerList = GetDeserializedCustomerList(encodedCustomerList);
                 customerList.Add(customerDTO);
             } else {
-                // Retrieve the list from DB
-                customerList = await _context.Customer
-                    .Select(x => CustomerToDTO(x))
-                    .ToListAsync();
-                
-                // await CacheStoreCustomerList(customerList);
+                customerList = await GetCustomerList();
             }
 
-            var cacheKey = "customerList";  // customerDTO.CustomerId.ToString();
-            string serializedCustomer = JsonConvert.SerializeObject(customerList);
-            var encodedCustomer = Encoding.UTF8.GetBytes(serializedCustomer);
-            
-            var options = new DistributedCacheEntryOptions()
-                            .SetSlidingExpiration(TimeSpan.FromMinutes(5))
-                            .SetAbsoluteExpiration(DateTime.Now.AddHours(6));
-            
-            await _distributedCache.SetAsync(cacheKey, encodedCustomer, options);
-        }   
+            await CacheStoreCustomerList(customerList);
+        }
     }
 }
