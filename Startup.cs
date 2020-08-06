@@ -41,7 +41,13 @@ namespace DativeBackend {
                         ValidateAudience = false
                     };
                 });
-                
+            
+            // Redis cache configuration
+            // TODO Check ConnectionMultiplexer as alternative
+            services.AddStackExchangeRedisCache(options => {
+                options.Configuration = Configuration.GetConnectionString("RedisCacheConnection");
+            });
+            
             services.AddControllers();
         }
 

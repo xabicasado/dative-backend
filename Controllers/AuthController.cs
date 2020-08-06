@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -33,7 +34,7 @@ namespace DativeBackend.Controllers {
                 return BadRequest();
             }
 
-            var customer = _context.Customer.FirstOrDefault(c => (
+            var customer = await _context.Customer.FirstOrDefaultAsync(c => (
                 c.Username == customerLoginDTO.Username) && 
                 (c.Password == customerLoginDTO.Password)
             );

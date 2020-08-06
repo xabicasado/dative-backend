@@ -11,6 +11,7 @@ Packages:
 - **Microsoft.VisualStudio.Web.CodeGeneration.Design**: 3.1.3
 - **Microsoft.EntityFrameworkCore.SqlServer**: 3.1.6
 - **Microsoft.AspNetCore.Authentication.JwtBearer**: 3.1.6
+- **Microsoft.Extensions.Caching.StackExchangeRedis**: 3.1.6
 
 Tools:
 - **dotnet-ef**: 3.1.6
@@ -36,4 +37,13 @@ dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet ef migrations add InitialCreate
 
 dotnet ef database update
+```
+
+## Run redis docker
+```
+docker run --name container-redis -p 6379:6379 -d redis
+
+docker exec -it container-redis sh
+
+redis-cli
 ```
